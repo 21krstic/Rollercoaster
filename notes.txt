@@ -1,1 +1,2 @@
 -sačuvati slike kao 32-bit depth, sa time GLFW radi
+-FORCE_FULLSCREEN staviti na true
