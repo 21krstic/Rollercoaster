@@ -7,9 +7,7 @@
 #include "../Header/Util.h"
 #include "../Header/spriteRenderer.hpp"
 #include "../rollercoaster.cpp"
-//#include <SDL.h>
-//#include <SDL_mixer.h>
-#define FORCE_FULLSCREEN false
+#define FORCE_FULLSCREEN true
 
 // Main fajl funkcija sa osnovnim komponentama OpenGL programa
 
@@ -38,12 +36,12 @@ int main()
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     if (FORCE_FULLSCREEN) const GLFWvidmode* mode = glfwGetVideoMode(monitor); // fullscren ili običan //
     else monitor = NULL;
-    GLFWwindow* window = glfwCreateWindow(1366, 768, "R o l e r k o s t e r", monitor, NULL);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "R o l e r k o s t e r", monitor, NULL);
     if (window == NULL) return endProgram("Prozor nije uspeo da se kreira.");
     glfwMakeContextCurrent(window);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); // Podešavanje callback funkcije za promenu veličine prozora //
@@ -146,8 +144,8 @@ int main()
     float cartSpeed[4] = { 0.8f,0.8f,0.8f,0.8f };
     float cartAngle[4] = { 0,0,0,0 };
     const float minSpeed = 0.05f, maxSpeed = 2.0f;
-    const float accel = 22.2f; // how quickly speed changes with slope
-    const float spacing = 0.001f; // how far behind each cart starts in u
+    const float accel = 22.2f;
+    const float spacing = 0.001f;
     const float curveLength = 3.5f;
     int nextPassenger = 0;
 
@@ -177,7 +175,9 @@ int main()
             for (int key = GLFW_KEY_1; key <= GLFW_KEY_8; ++key) {
                 if (glfwGetKey(window, key) == GLFW_PRESS) {
                     int idx = key - GLFW_KEY_1;  // 0..7
-                    if (idx < passengerSickState.size()) passengerSickState[idx] = 1;
+                    if (idx < nextPassenger) { passengerSickState[idx] = 1; 
+                    std::cout << "bolesnifikovan";
+                    }
                 }
             }
         }
@@ -217,7 +217,7 @@ int main()
             else cartSpeed[i] -= accel * dydu * dt * 0.05f;
             cartSpeed[i] = glm::clamp(cartSpeed[i] * 0.999f, minSpeed, maxSpeed);
 
-            if (hasSick) cartSpeed[i] = std::max(cartSpeed[i] - 0.01f, 0.2f); // imamo bolesnika... uspori na keca
+            if (hasSick) cartSpeed[i] = std::max(cartSpeed[i] - 0.02f, 0.2f); // imamo bolesnika... usporavaj na 0.2
 
             float startX = -0.83f + i * 0.2f;
             float x = startX + uWrapped * 0.6f;
@@ -230,11 +230,10 @@ int main()
             coasterModel[i] = glm::scale(coasterModel[i], glm::vec3(0.12f));
         }
 
-        static bool lastSpace = false;
+        static bool lastSpace = false; // dodavanje putnika
         bool spaceNow = (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS);
         if (spaceNow && !lastSpace) {
             if (!coaster.moving) {
-                // add a passenger if available
                 if (nextPassenger < 8) {
                     nextPassenger++;
                     std::cout << "Added passenger " << nextPassenger << "\n";
@@ -246,11 +245,10 @@ int main()
         double mx, my;
         glfwGetCursorPos(window, &mx, &my);
 
-        // convert from screen coords to your -1..1 coordinate system
         int width, height;
         glfwGetWindowSize(window, &width, &height);
         glm::vec2 mouse((float)(mx / width * 2.0 - 1.0),
-            (float)(1.0 - my / height * 2.0)); // invert y
+            (float)(1.0 - my / height * 2.0)); // invert y ???? 
 
         for (auto& p : passengers) {
             if (mouseInBounds(mouse, p.pos, glm::vec2(1.1f, 1.05f))) {
@@ -259,14 +257,14 @@ int main()
             }
         }
 
-        for (int i = 3; i >= 0; --i) { // start from back cart to front
+        for (int i = 3; i >= 0; --i) { 
             int start = i * 2;
             int end = std::min(start + 2, nextPassenger);
             for (int j = start; j < end; ++j) {
                 passengerModel[j] = glm::mat4(1.0f);
 
-                float xOffset = (j - start == 0 ? 0.04f : -0.04f); // right and left
-                float yOffset = 0.1f; // above the cart
+                float xOffset = (j - start == 0 ? 0.04f : -0.04f); // desno pa levo
+				float yOffset = 0.1f; // putnici sede malo iznad centra kola
 
                 passengerModel[j] = glm::translate(passengerModel[j], glm::vec3(
                     glm::vec3(coasterModel[3-i][3]) + glm::vec3(xOffset, yOffset, 0.0f)
