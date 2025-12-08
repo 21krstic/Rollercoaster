@@ -5,6 +5,7 @@
 #include <vector>
 #include "../Header/Util.h"
 #include "../Header/spriteRenderer.hpp"
+#include "../rollercoaster.cpp"
 #define FORCE_FULLSCREEN false
 
 // Main fajl funkcija sa osnovnim komponentama OpenGL programa
@@ -69,6 +70,13 @@ int main()
         frames.push_back(t);
     }
 
+	GLuint carTexture = loadImageToTexture("Resources/car.png");
+    Rollercoaster coaster;
+    coaster.init(trackPoints, carTexture);
+    glm::mat4 coasterModel = glm::mat4(1.0f);
+    coasterModel = glm::scale(coasterModel, glm::vec3(0.17));
+
+
     while (!glfwWindowShouldClose(window))
     {
         float dt = (float)(glfwGetTime() - frameStart);
@@ -88,6 +96,25 @@ int main()
             currentFrame = (currentFrame + 1) % frames.size();
         }
         quad.draw(frames[currentFrame], modelPotpis);
+
+        //handleInput(coaster); // space, enter, 1-8, mouse clicks
+        coaster.update(dt);
+        //drawTrack();
+
+        glColor3f(1.0f, 0.0f, 0.0f); // red for track points
+        glBegin(GL_LINE_STRIP);
+        for (auto& p : trackPoints) {
+            glVertex2f(p.x, p.y);
+        }
+        glEnd();
+        glPointSize(5.0f);
+        glBegin(GL_POINTS);
+        for (auto& p : trackPoints) {
+            glVertex2f(p.x, p.y);
+        }
+        glEnd();
+
+       // quad.draw(carTexture, coasterModel);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

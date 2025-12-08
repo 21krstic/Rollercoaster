@@ -52,10 +52,8 @@ public:
     void draw(GLuint tex, const glm::mat4& model) {
         glUseProgram(shader);
 
-        // Pass the model matrix
         glUniformMatrix4fv(glGetUniformLocation(shader, "uModel"), 1, GL_FALSE, glm::value_ptr(model));
 
-        // Bind texture
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex);
         glUniform1i(glGetUniformLocation(shader, "spriteTexture"), 0); // make sure uniform name matches shader
@@ -64,7 +62,6 @@ public:
         glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
         glBindVertexArray(0);
     }
-
 
     void cleanup() {
         glDeleteBuffers(1, &VBO);
